@@ -1,16 +1,13 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, g, flash
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, g, flash, get_flashed_messages
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from PIL import Image
 import sqlite3
 from flask_wtf.csrf import CSRFProtect
 import logging
-from io import BytesIO
-from flask import send_file
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secure-key-here')
+app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB limit
@@ -120,10 +117,7 @@ def add_recipe():
             filename = None
             if image and allowed_file(image.filename):
                 try:
-                    img = Image.open(image)
-                    img.verify()
-                    image.seek(0)
-                    filename = secure_filename(image.filename)
+                    filename - secure_filename(image.filename)
                     image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     app.logger.info(f"Image saved: {filename}")
                 except Exception as e:
@@ -254,22 +248,6 @@ def add_favorite(recipe_id):
             return jsonify({'error': str(e)}), 500
         return redirect(url_for('view_recipes'))
 
-@app.route('/remove_favorite/<int:recipe_id>', methods=['POST'])
-def remove_favorite(recipe_id):
-    from database import remove_favorite_from_db, get_recipe_by_id
-    if 'user_id' not in session:
-        return jsonify({'status': 'error', 'message': 'Not logged in'}), 401
-    try:
-        if not get_recipe_by_id(recipe_id):
-            app.logger.error(f"Recipe not found: {recipe_id}")
-            return jsonify({'status': 'error', 'message': 'Recipe not found'}), 404
-        remove_favorite_from_db(session['user_id'], recipe_id)
-        app.logger.info(f"Favorite removed for recipe_id: {recipe_id}")
-        return jsonify({'status': 'success', 'action': 'removed'})
-    except Exception as e:
-        app.logger.error(f"Remove favorite error: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
 @app.route('/search')
 def search():
     if 'user_id' not in session:
@@ -313,9 +291,6 @@ def edit_recipe(recipe_id):
             filename = recipe['image']
             if new_image and allowed_file(new_image.filename):
                 try:
-                    img = Image.open(new_image)
-                    img.verify()
-                    new_image.seek(0)
                     filename = secure_filename(new_image.filename)
                     image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     new_image.save(image_path)
@@ -406,50 +381,27 @@ def share_recipe(recipe_id):
         app.logger.error(f"Share recipe error: {str(e)}")
         return f"Server error: {str(e)}", 500
     
-@app.route('/download_recipe_pdf/<int:recipe_id>')
-def download_recipe_pdf(recipe_id):
+@app.route('/copy_share_link/<int:recipe_id>', methods=['POST'])
+def copy_share_link(recipe_id):
     from database import get_recipe_by_id
-    import subprocess
     try:
         recipe = get_recipe_by_id(recipe_id)
         if not recipe:
             app.logger.error(f"Recipe not found: {recipe_id}")
-            return "Recipe not found", 404
-        latex_content = r"""
-        \documentclass{article}
-        \usepackage[utf8]{inputenc}
-        \usepackage{parskip}
-        \usepackage{enumitem}
-        \begin{document}
-        \textbf{\Large """ + recipe['title'] + r"""}
-        \vspace{0.5cm}
-        \textbf{Category:} """ + recipe['category'] + r""" \\
-        \textbf{Tags:} """ + (recipe['tags'] or 'None') + r""" \\
-        \vspace{0.5cm}
-        \textbf{Ingredients} \\
-        \begin{itemize}
-        """ + ''.join([f"\\item {ing.strip()}" for ing in recipe['ingredients'].split(',')]) + r"""
-        \end{itemize}
-        \vspace{0.5cm}
-        \textbf{Instructions} \\
-        """ + recipe['instructions'].replace('\n', '\\\\') + r"""
-        \end{document}
-        """
-        with open(f'recipe_{recipe_id}.tex', 'w', encoding='utf-8') as f:
-            f.write(latex_content)
-        subprocess.run(['latexmk', '-pdf', f'recipe_{recipe_id}.tex'], check=True)
-        pdf_path = f'recipe_{recipe_id}.pdf'
-        app.logger.info(f"Generated PDF for recipe {recipe_id}: {pdf_path}")
-        return send_file(pdf_path, as_attachment=True, download_name=f"{recipe['title']}.pdf")
+            return jsonify({'error': 'Recipe not found'}), 404
+        share_url = url_for('share_recipe', recipe_id=recipe_id, _external=True)
+        flash('Share link copied!', 'success')
+        # Get flashed messages to clear them
+        flashed_messages = get_flashed_messages(with_categories=True)
+        app.logger.info(f"Share link copied for recipe_id: {recipe_id}")
+        return jsonify({
+            'success': True,
+            'message': flashed_messages[0][1] if flashed_messages else 'Share link copied!',
+            'url': share_url
+        })
     except Exception as e:
-        app.logger.error(f"PDF generation error: {str(e)}")
-        return f"Server error: {str(e)}", 500
-    finally:
-        for ext in ['tex', 'aux', 'log', 'pdf', 'fls', 'fdb_latexmk']:
-            try:
-                os.remove(f'recipe_{recipe_id}.{ext}')
-            except FileNotFoundError:
-                pass
-
+        app.logger.error(f"Copy share link error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)

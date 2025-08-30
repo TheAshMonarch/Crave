@@ -84,7 +84,7 @@
             {% endif %}
           </div>
           <form
-            action="{{ url_for('remove_favorite', recipe_id=recipe.id) }}"
+            action="{{ url_for('add_favorite', recipe_id=recipe.id) }}"
             method="POST"
             class="favorite-form"
           >

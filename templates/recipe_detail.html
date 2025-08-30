@@ -42,7 +42,7 @@
   {% endif %}
 
   <h2 class="text-xl font-semibold mb-4">Ingredients</h2>
-  <p class="text-gray-600">{{ recipe.instructions }}</p>
+  <p class="text-gray-600">{{ recipe.ingredients }}</p>
 
   <h2 class="text-xl font-semibold mt-6 mb-4">Instructions</h2>
   <p class="text-gray-600">{{ recipe.instructions }}</p>
@@ -50,9 +50,12 @@
   <div class="mt-6">
     <h2 class="text-xl font-semibold mb-4">Share Recipe</h2>
     <div class="flex gap-4">
-      <button onclick="copyShareLink('{{ url_for('share_recipe', recipe_id=recipe.id, _external=True) }}')" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
-        Copy Share Link
-      </button>
+      <form action="{{ url_for('copy_share_link', recipe_id=recipe.id) }}" method="POST" class="copy-share-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
+          Copy Share Link
+        </button>
+      </form>
     </div>
   </div>
 
@@ -81,6 +84,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
+  // Handle favorite form submission
   document.querySelectorAll('.favorite-form').forEach(form => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -101,12 +105,10 @@
         const data = await response.json();
         const toast = document.getElementById('toast');
         if (data.success) {
-          // Update button text and style
           if (data.action === 'added') {
             button.textContent = 'Remove Favorite';
             button.classList.remove('text-orange-500');
             button.classList.add('text-red-500');
-            // Trigger confetti for adding favorite
             confetti({
               particleCount: 100,
               spread: 70,
@@ -125,7 +127,6 @@
           }
           setTimeout(() => toast.classList.add('hidden'), 3000);
         } else {
-          // Show error toast
           toast.textContent = data.error || 'An error occurred';
           toast.classList.remove('hidden', 'bg-green-500');
           toast.classList.add('bg-red-500');
@@ -141,14 +142,67 @@
     });
   });
 
-  function copyShareLink(url) {
-    navigator.clipboard.writeText(url).then(() => {
+  // Handle copy share link form submission
+  document.querySelectorAll('.copy-share-form').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const csrfToken = form.querySelector('input[name="csrf_token"]').value;
       const toast = document.getElementById('toast');
-      toast.textContent = 'Share link copied!';
-      toast.classList.remove('hidden', 'bg-red-500');
-      toast.classList.add('bg-green-500');
-      setTimeout(() => toast.classList.add('hidden'), 3000);
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `csrf_token=${encodeURIComponent(csrfToken)}`
+        });
+        const data = await response.json();
+        if (data.success) {
+          // Try modern Clipboard API
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(data.url);
+            toast.textContent = data.message;
+            toast.classList.remove('hidden', 'bg-red-500');
+            toast.classList.add('bg-green-500');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+          } else {
+            // Fallback for older browsers or non-secure contexts
+            const tempInput = document.createElement('input');
+            tempInput.value = data.url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+              document.execCommand('copy');
+              toast.textContent = data.message;
+              toast.classList.remove('hidden', 'bg-red-500');
+              toast.classList.add('bg-green-500');
+              setTimeout(() => toast.classList.add('hidden'), 3000);
+            } catch (err) {
+              console.error('Fallback copy error:', err);
+              toast.textContent = 'Failed to copy link';
+              toast.classList.remove('hidden', 'bg-green-500');
+              toast.classList.add('bg-red-500');
+              setTimeout(() => toast.classList.add('hidden'), 3000);
+            }
+            document.body.removeChild(tempInput);
+          }
+        } else {
+          toast.textContent = data.error || 'An error occurred';
+          toast.classList.remove('hidden', 'bg-green-500');
+          toast.classList.add('bg-red-500');
+          setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast.textContent = 'An error occurred';
+        toast.classList.remove('hidden', 'bg-green-500');
+        toast.classList.add('bg-red-500');
+        setTimeout(() => toast.classList.add('hidden'), 3000);
+      }
     });
-  }
+  });
 </script>
 {% endblock %}
