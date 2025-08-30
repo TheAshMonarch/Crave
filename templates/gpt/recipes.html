@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Recipes - My Recipes{% endblock %}
+{% block content %}
+<div class="mb-8">
+  <div class="flex items-center gap-2 mb-6">
+    <div class="bg-yellow-400 p-2 rounded-md">
+      <span class="font-bold text-lg">M.</span>
+    </div>
+    <h1 class="text-2xl font-bold">Recipes</h1>
+  </div>
+  <form method="GET" action="{{ url_for('search') }}" class="flex gap-2">
+    <input
+      type="text"
+      name="query"
+      placeholder="Search recipes..."
+      class="w-full p-2 border rounded-md"
+    />
+    <button type="submit" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
+      Search
+    </button>
+  </form>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for recipe in recipes %}
+  <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="block">
+    <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition">
+      {% if recipe.image %}
+      <img
+        src="{{ url_for('static', filename='uploads/' + recipe.image) }}"
+        alt="{{ recipe.title }}"
+        class="w-full h-48 object-cover rounded-md mb-4"
+      />
+      {% else %}
+      <div class="w-full h-48 bg-gray-200 rounded-md mb-4 flex items-center justify-center">
+        <span class="text-gray-500">No Image</span>
+      </div>
+      {% endif %}
+      <div class="flex justify-between items-start mb-2">
+        <div>
+          {% if recipe.tags %}
+          <ul class="list-disc list-inside text-sm text-gray-600">
+            {% for tag in recipe.tags.split(',') %}
+            <li>{{ tag.strip() }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        <form
+          action="{% if recipe.id in user_favorites_ids %}{{ url_for('remove_favorite', recipe_id=recipe.id) }}{% else %}{{ url_for('save_favorite', recipe_id=recipe.id) }}{% endif %}"
+          method="POST"
+          class="favorite-form"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button
+            type="submit"
+            class="text-sm {% if recipe.id in user_favorites_ids %}text-red-500{% else %}text-orange-500{% endif %} hover:underline"
+          >
+            {% if recipe.id in user_favorites_ids %}Remove Favorite{% else %}Save to Favorites{% endif %}
+          </button>
+        </form>
+      </div>
+      <h2 class="text-lg font-semibold">{{ recipe.title }}</h2>
+      <p class="text-sm text-gray-600">{{ recipe.category }}</p>
+    </div>
+  </a>
+  {% else %}
+  <p class="text-center text-gray-600">No recipes found.</p>
+  {% endfor %}
+</div>
+
+{% if has_next %}
+<div class="mt-6 text-center">
+  <a
+    href="{{ url_for('view_recipes', page=page + 1) }}"
+    class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600"
+  >
+    Next Page
+  </a>
+</div>
+{% endif %}
+{% endblock %}

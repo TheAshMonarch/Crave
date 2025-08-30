@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Edit Recipe - My Recipes{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto mt-12 p-6 bg-white rounded-lg shadow-md">
+  <a href="{{ url_for('view_recipes') }}" class="text-orange-500 hover:underline mb-4 inline-block">&larr; Back</a>
+  <h1 class="text-2xl font-bold mb-6">Edit Recipe</h1>
+  <form method="POST" action="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" enctype="multipart/form-data">
+    <input type='hidden' name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="mb-4">
+      <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+      <input type="text" id="title" name="title" value="{{ recipe.title }}" class="mt-1 block w-full p-2 border rounded-md" required>
+    </div>
+    <div class="mb-4">
+      <label for="ingredients" class="block text-sm font-medium text-gray-700">Ingredients</label>
+      <textarea id="ingredients" name="ingredients" class="mt-1 block w-full p-2 border rounded-md" required>{{ recipe.ingredients }}</textarea>
+    </div>
+    <div class="mb-4">
+      <label for="instructions" class="block text-sm font-medium text-gray-700">Instructions</label>
+      <textarea id="instructions" name="instructions" class="mt-1 block w-full p-2 border rounded-md" required>{{ recipe.instructions }}</textarea>
+    </div>
+    <div class="mb-4">
+      <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+      <input type="text" id="category" name="category" value="{{ recipe.category }}" class="mt-1 block w-full p-2 border rounded-md" required>
+    </div>
+    <div class="mb-4">
+      <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
+      <input type="text" id="tags" name="tags" value="{{ recipe.tags }}" class="mt-1 block w-full p-2 border rounded-md">
+    </div>
+    <div class="mb-4">
+      <label for="new_image" class="block text-sm font-medium text-gray-700">Upload New Image</label>
+      <input type="file" id="new_image" name="new_image" accept="image/png,image/jpeg" class="mt-1 block w-full p-2 border rounded-md">
+      {% if recipe.image %}
+        <p class="text-sm text-gray-600">Current image: {{ recipe.image }}</p>
+      {% else %}
+        <p class="text-sm text-gray-600">No image selected</p>
+      {% endif %}
+    </div>
+    <button type="submit" class="w-full bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">Update Recipe</button>
+  </form>
+  <a href="{{ url_for('home') }}" class="text-orange-500 hover:underline mt-4 inline-block">← Back to Home</a>
+</div>
+{% endblock %}

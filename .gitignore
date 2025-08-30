@@ -1,0 +1,13 @@
+# Ignore virtual environment
+venv/
+env/
+
+# Ignore SQLite database
+recipes.db
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore session files
+*.session

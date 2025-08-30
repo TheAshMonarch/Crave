@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Profile - My Recipes{% endblock %}
+{% block content %}
+<div class="mb-8">
+  <div class="flex items-center gap-2 mb-6">
+    <div class="bg-yellow-400 p-2 rounded-md">
+      <span class="font-bold text-lg">ASH.</span>
+    </div>
+    <h1 class="text-2xl font-bold">Profile - {{ username }}</h1>
+  </div>
+</div>
+
+<div class="mb-12">
+  <h2 class="text-xl font-semibold mb-4">Your Recipes</h2>
+  {% if user_recipes %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for recipe in user_recipes %}
+    <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition">
+      {% if recipe.image %}
+      <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="block">
+      <img
+      src="{{ url_for('static', filename='uploads/' + recipe.image) }}"
+      alt="{{ recipe.title }}"
+      class="w-full h-48 object-cover rounded-md mb-4"
+      />
+      <a/>
+      {% else %}
+      <div class="w-full h-48 bg-gray-200 rounded-md mb-4 flex items-center justify-center">
+        <span class="text-gray-500">No Image</span>
+      </div>
+      {% endif %}
+      <h3 class="text-lg font-semibold">{{ recipe.title }}</h3>
+      <p class="text-sm text-gray-600">{{ recipe.category }}</p>
+      <div class="flex justify-between mt-2">
+        <a
+          href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}"
+          class="text-orange-500 hover:underline"
+        >
+          Edit
+        </a>
+        <form
+          action="{{ url_for('delete_recipe', recipe_id=recipe.id) }}"
+          method="POST"
+          class="delete-form"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="text-red-500 hover:underline">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-gray-600">You haven't added any recipes yet.</p>
+  {% endif %}
+</div>
+
+<div>
+  <h2 class="text-xl font-semibold mb-4">Your Favorites</h2>
+  {% if favorites %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for recipe in favorites %}
+    <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="block">
+      <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition">
+        {% if recipe.image %}
+        <img
+          src="{{ url_for('static', filename='uploads/' + recipe.image) }}"
+          alt="{{ recipe.title }}"
+          class="w-full h-48 object-cover rounded-md mb-4"
+        />
+        {% else %}
+        <div class="w-full h-48 bg-gray-200 rounded-md mb-4 flex items-center justify-center">
+          <span class="text-gray-500">No Image</span>
+        </div>
+        {% endif %}
+        <div class="flex justify-between items-start mb-2">
+          <div>
+            {% if recipe.tags %}
+            <ul class="list-disc list-inside text-sm text-gray-600">
+              {% for tag in recipe.tags.split(',') %}
+              <li>{{ tag.strip() }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+          <form
+            action="{{ url_for('remove_favorite', recipe_id=recipe.id) }}"
+            method="POST"
+            class="favorite-form"
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="text-red-500 hover:underline">Remove Favorite</button>
+          </form>
+        </div>
+        <h3 class="text-lg font-semibold">{{ recipe.title }}</h3>
+        <p class="text-sm text-gray-600">{{ recipe.category }}</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-gray-600">You haven't favorited any recipes yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

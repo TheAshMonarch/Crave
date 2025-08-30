@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Add Recipe - My Recipes{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-12 p-6 bg-white rounded-lg shadow-md">
+  <div class="flex items-center gap-2 mb-6">
+    <div class="bg-yellow-400 p-2 rounded-md">
+      <span class="font-bold text-lg">M.</span>
+    </div>
+    <h1 class="text-2xl font-bold">Add Recipe</h1>
+  </div>
+  <form method="POST" action="{{ url_for('add_recipe') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="mb-4">
+      <label for="title" class="block text-sm font-medium text-gray-700">Recipe Title</label>
+      <input type="text" id="title" name="title" class="mt-1 block w-full p-2 border rounded-md" required>
+    </div>
+    <div class="mb-4">
+      <label for="ingredients" class="block text-sm font-medium text-gray-700">Ingredients</label>
+      <textarea id="ingredients" name="ingredients" class="mt-1 block w-full p-2 border rounded-md" rows="4" required></textarea>
+    </div>
+    <div class="mb-4">
+      <label for="instructions" class="block text-sm font-medium text-gray-700">Instructions</label>
+      <textarea id="instructions" name="instructions" class="mt-1 block w-full p-2 border rounded-md" rows="4" required></textarea>
+    </div>
+    <div class="mb-4">
+      <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+      <input type="text" id="category" name="category" class="mt-1 block w-full p-2 border rounded-md" required>
+    </div>
+    <div class="mb-4">
+      <label for="tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+      <input type="text" id="tags" name="tags" class="mt-1 block w-full p-2 border rounded-md">
+    </div>
+    <div class="mb-4">
+      <label for="image" class="block text-sm font-medium text-gray-700">Image (optional)</label>
+      <input type="file" id="image" name="image" accept="image/*" class="mt-1 block w-full">
+    </div>
+    <button type="submit" class="w-full bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">Add Recipe</button>
+  </form>
+</div>
+{% endblock %}

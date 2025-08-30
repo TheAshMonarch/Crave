@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Home - NAMD{% endblock %}
+
+{% block content %}
+<section class="flex flex-col-reverse md:flex-row items-center justify-between max-w-7xl mx-auto px-8 py-16 gap-10">
+  <div class="md:w-1/2">
+    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-6">
+      Explore beautiful <br />
+      places to visit.
+    </h1>
+    <p class="text-gray-500 mb-8">
+      Enjoy the breathtaking view of the nature, Relax and cherish your
+      dream to the fullest.
+    </p>
+    <div class="flex items-center gap-4">
+      <a href="{{ url_for('view_recipes') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold text-sm">Explore More</a>
+    </div>
+  </div>
+
+  <div class="md:w-1/2 relative flex justify-center">
+    <div class="relative">
+      <img src="/static/images/placeholder1.jpg" alt="Main Image" class="rounded-3xl shadow-lg w-[350px] md:w-[400px]">
+      <div class="absolute top-4 left-4 bg-white rounded-xl shadow px-4 py-2 flex items-center gap-3">
+        <img src="/static/images/avatar1.png" class="h-8 w-8 rounded-full" alt="Avatar">
+        <div>
+          <p class="text-sm font-semibold">Wade Warren</p>
+          <p class="text-xs text-yellow-500">★ 4.8 (45)</p>
+        </div>
+      </div>
+
+      <img src="/static/images/placeholder2.jpg" alt="Second Image" class="absolute -bottom-10 -left-10 w-48 rounded-2xl border-4 border-white shadow">
+      <div class="absolute bottom-4 right-4 bg-white rounded-xl shadow px-4 py-2 flex items-center gap-3">
+        <img src="/static/images/avatar2.png" class="h-8 w-8 rounded-full" alt="Avatar">
+        <div>
+          <p class="text-sm font-semibold">Jacob Jones</p>
+          <p class="text-xs text-yellow-500">★ 4.8 (45)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

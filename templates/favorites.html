@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Favorites - My Recipes{% endblock %}
+{% block content %}
+
+<div class="mb-8">
+  <a href="{{ url_for('view_recipes') }}" class="text-orange-500 hover:underline">← Back</a>
+  <div class="flex items-center gap-2 mb-6">
+    <div class="bg-yellow-400 p-2 rounded-md">
+      <span class="font-bold text-lg">M.</span>
+    </div>
+    <h1 class="text-2xl font-bold">Favorites</h1>
+  </div>
+  <p class="text-gray-600">Your saved dishes</p>
+  <p class="mt-2">Here are the recipes you’ve marked as favorites. Enjoy easy access to your top picks!</p>
+</div>
+
+<!-- Toast Container -->
+<div id="toast" class="hidden fixed top-4 right-4 p-4 rounded-md shadow-md text-white transition-opacity duration-300 z-50"></div>
+
+{% if favorites|length == 0 %}
+<p class="text-center text-gray-600">You haven’t saved any recipes yet.</p>
+{% else %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for recipe in favorites %}
+  <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition">
+    <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="block">
+      <div class="mb-4">
+        {% if recipe.image %}
+        <img
+          src="{{ url_for('static', filename='uploads/' + recipe.image) }}"
+          alt="{{ recipe.title }}"
+          class="w-full h-48 object-cover rounded-md"
+        />
+        {% else %}
+        <div class="w-full h-48 bg-gray-200 rounded-md flex items-center justify-center">
+          <span class="text-gray-500">No Image</span>
+        </div>
+        {% endif %}
+        <h2 class="text-lg font-semibold mt-4">{{ recipe.title }}</h2>
+        <p class="text-sm text-gray-600">{{ recipe.category }}</p>
+      </div>
+    </a>
+    <div class="flex justify-between items-center">
+      <form
+        action="{{ url_for('add_favorite', recipe_id=recipe.id) }}"
+        method="POST"
+        class="favorite-form"
+        data-recipe-id="{{ recipe.id }}"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button
+          type="submit"
+          class="favorite-btn text-sm text-red-500 hover:underline"
+        >
+          Remove Favorite
+        </button>
+      </form>
+      {% if recipe.user_id == session['user_id'] %}
+      <a href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="text-orange-500 hover:underline">Edit</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="mt-6 text-center">
+  {% if page > 1 %}
+  <a href="{{ url_for('view_favorites', page=page - 1) }}" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">Previous</a>
+  {% endif %}
+  <span>Page {{ page }}</span>
+  {% if has_next %}
+  <a href="{{ url_for('view_favorites', page=page + 1) }}" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">Next</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+  document.querySelectorAll('.favorite-form').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const recipeId = form.dataset.recipeId;
+      const button = form.querySelector('.favorite-btn');
+      const card = form.closest('.bg-white'); // Find the recipe card
+      const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `csrf_token=${encodeURIComponent(csrfToken)}`
+        });
+        const data = await response.json();
+        const toast = document.getElementById('toast');
+        if (data.success) {
+          if (data.action === 'added') {
+            button.textContent = 'Remove Favorite';
+            button.classList.remove('text-orange-500');
+            button.classList.add('text-red-500');
+            // Trigger confetti for adding favorite
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+            toast.textContent = data.message;
+            toast.classList.remove('hidden', 'bg-red-500');
+            toast.classList.add('bg-green-500');
+          } else {
+            // Remove the recipe card from the DOM
+            card.remove();
+            toast.textContent = data.message;
+            toast.classList.remove('hidden', 'bg-red-500');
+            toast.classList.add('bg-green-500');
+            // Check if no favorites remain
+            if (!document.querySelector('.bg-white')) {
+              const container = document.querySelector('.grid');
+              container.innerHTML = '<p class="text-center text-gray-600">You haven’t saved any recipes yet.</p>';
+            }
+          }
+          setTimeout(() => toast.classList.add('hidden'), 3000);
+        } else {
+          toast.textContent = data.error || 'An error occurred';
+          toast.classList.remove('hidden', 'bg-green-500');
+          toast.classList.add('bg-red-500');
+          setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast.textContent = 'An error occurred';
+        toast.classList.remove('hidden', 'bg-green-500');
+        toast.classList.add('bg-red-500');
+        setTimeout(() => toast.classList.add('hidden'), 3000);
+      }
+    });
+  });
+</script>
+{% endblock %}
