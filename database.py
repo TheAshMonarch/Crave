@@ -153,3 +153,37 @@ def get_recipes_by_tag(tag):
     cursor = db.cursor()
     cursor.execute('SELECT * FROM recipes WHERE tags LIKE ?', (f'%{tag}%',))
     return cursor.fetchall()
+
+def get_all_recipes_with_users():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        SELECT r.*, u.username 
+        FROM recipes r 
+        JOIN users u ON r.user_id = u.id 
+        ORDER BY r.id DESC
+    ''')
+    return cursor.fetchall()
+
+def get_user_favorites_with_username(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        SELECT r.*, u.username 
+        FROM recipes r 
+        JOIN favorites f ON r.id = f.recipe_id 
+        JOIN users u ON r.user_id = u.id
+        WHERE f.user_id = ?
+    ''', (user_id,))
+    return cursor.fetchall()
+
+def get_user_recipes_with_username(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        SELECT r.*, u.username 
+        FROM recipes r 
+        JOIN users u ON r.user_id = u.id 
+        WHERE r.user_id = ?
+    ''', (user_id,))
+    return cursor.fetchall()

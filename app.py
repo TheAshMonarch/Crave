@@ -117,7 +117,7 @@ def add_recipe():
             filename = None
             if image and allowed_file(image.filename):
                 try:
-                    filename - secure_filename(image.filename)
+                    filename = secure_filename(image.filename)
                     image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     app.logger.info(f"Image saved: {filename}")
                 except Exception as e:
@@ -137,7 +137,7 @@ def add_recipe():
 
 @app.route('/recipes')
 def view_recipes():
-    from database import get_all_recipes, get_user_favorites
+    from database import get_all_recipes_with_users, get_user_favorites  # Changed import
     if 'user_id' not in session:
         app.logger.info("No user_id in session, redirecting to login")
         return redirect(url_for('login'))
@@ -146,7 +146,7 @@ def view_recipes():
         page = request.args.get('page', 1, type=int)
         per_page = 8
         offset = (page - 1) * per_page
-        all_recipes = get_all_recipes()
+        all_recipes = get_all_recipes_with_users()  # Use new function
         app.logger.info(f"Retrieved {len(all_recipes)} recipes")
         paginated_recipes = all_recipes[offset:offset + per_page]
         has_next = len(all_recipes) > offset + per_page
@@ -218,35 +218,47 @@ def recipe_detail(recipe_id):
 
 @app.route('/favorite/<int:recipe_id>', methods=['POST'])
 def add_favorite(recipe_id):
+    from database import get_db
     if 'user_id' not in session:
-        return jsonify({'error': 'Login required'}), 401
-    from database import get_db, add_favorite, remove_favorite_from_db
+        # Return error if the user is not logged in
+        return jsonify({'success': False, 'error': 'You need to log in to perform this action.'}), 401
+
     try:
         db = get_db()
         cursor = db.cursor()
+
+        # Check if the recipe is already in the user's favorites
         cursor.execute(
             "SELECT 1 FROM favorites WHERE user_id = ? AND recipe_id = ?",
             (session['user_id'], recipe_id)
         )
         is_favorited = bool(cursor.fetchone())
+
         if is_favorited:
-            remove_favorite_from_db(session['user_id'], recipe_id)
-            message = "Recipe removed from favorites!"
-            action = "removed"
+            # Remove from favorites if already favorited
+            cursor.execute(
+                "DELETE FROM favorites WHERE user_id = ? AND recipe_id = ?",
+                (session['user_id'], recipe_id)
+            )
+            db.commit()
+            action = 'removed'
+            message = 'Recipe removed from favorites.'
         else:
-            add_favorite(session['user_id'], recipe_id)
-            message = "Recipe added to favorites!"
-            action = "added"
-        flash(message, "success")
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': True, 'action': action, 'message': message})
-        return redirect(url_for('view_recipes'))
+            # Add to favorites if not already favorited
+            cursor.execute(
+                "INSERT INTO favorites (user_id, recipe_id) VALUES (?, ?)",
+                (session['user_id'], recipe_id)
+            )
+            db.commit()
+            action = 'added'
+            message = 'Recipe added to favorites.'
+
+        # Return success response
+        return jsonify({'success': True, 'action': action, 'message': message})
+
     except Exception as e:
-        app.logger.error(f"Favorite toggle error: {str(e)}")
-        flash("An error occurred while updating favorites.", "error")
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'error': str(e)}), 500
-        return redirect(url_for('view_recipes'))
+        app.logger.error(f"Error in add_favorite: {str(e)}")
+        return jsonify({'success': False, 'error': 'An error occurred while updating favorites.'}), 500
 
 @app.route('/search')
 def search():
@@ -363,7 +375,7 @@ def recipes_by_tag(tag):
     except Exception as e:
         app.logger.error(f"Recipes by tag error: {str(e)}")
         return f"Server error: {str(e)}", 500
-    
+
 @app.route('/recipe/<int:recipe_id>/share')
 def share_recipe(recipe_id):
     from database import get_recipe_by_id
@@ -380,7 +392,7 @@ def share_recipe(recipe_id):
     except Exception as e:
         app.logger.error(f"Share recipe error: {str(e)}")
         return f"Server error: {str(e)}", 500
-    
+
 @app.route('/copy_share_link/<int:recipe_id>', methods=['POST'])
 def copy_share_link(recipe_id):
     from database import get_recipe_by_id
@@ -402,6 +414,6 @@ def copy_share_link(recipe_id):
     except Exception as e:
         app.logger.error(f"Copy share link error: {str(e)}")
         return jsonify({'error': str(e)}), 500
-    
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)

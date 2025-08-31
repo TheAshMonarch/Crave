@@ -31,6 +31,7 @@
       {% endif %}
       <h3 class="text-lg font-semibold">{{ recipe.title }}</h3>
       <p class="text-sm text-gray-600">{{ recipe.category }}</p>
+      <p class="text-xs text-gray-400 mt-2">By: {{ recipe.username }}</p>
       <div class="flex justify-between mt-2">
         <a
           href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}"
@@ -94,6 +95,7 @@
         </div>
         <h3 class="text-lg font-semibold">{{ recipe.title }}</h3>
         <p class="text-sm text-gray-600">{{ recipe.category }}</p>
+        <p class="text-xs text-gray-400 mt-2">By: {{ recipe.username }}</p>
       </div>
     </a>
     {% endfor %}

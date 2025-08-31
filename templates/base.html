@@ -187,8 +187,10 @@
     </main>
 
     <div id="toast-container" class="fixed top-4 right-4 z-50"></div>
-
 <script>
+  // Flag to track if we've already initialized
+  let favoritesInitialized = false;
+
   document.addEventListener('DOMContentLoaded', function () {
     const menuBtn = document.getElementById('menu-btn');
     const mobileNav = document.getElementById('mobile-nav');
@@ -198,69 +200,31 @@
       });
     }
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-    document.querySelectorAll('form.favorite-form').forEach((form) => {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        try {
-          const response = await fetch(form.action, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'X-CSRF-Token': csrfToken,
-            },
-            body: new URLSearchParams(new FormData(form)),
-          });
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          const data = await response.json();
-          if (data.status === 'success') {
-            const button = form.querySelector('button');
-            if (data.action === 'added') {
-              button.classList.replace('text-orange-500', 'text-red-500');
-              button.textContent = 'Remove Favorite';
-              form.action = form.action.replace('save_favorite', 'remove_favorite');
-              triggerConfetti();
-              showToast('Added to favorites!');
-            } else {
-              button.classList.replace('text-red-500', 'text-orange-500');
-              button.textContent = 'Save to Favorites';
-              form.action = form.action.replace('remove_favorite', 'save_favorite');
-            }
-          } else {
-            console.error('Error:', data.message);
-          }
-        } catch (error) {
-          console.error('Error in favorite form submission:', error);
-        }
-      });
-    });
+    // Only initialize favorites once
+    if (!favoritesInitialized) {
+      initializeFavorites();
+      favoritesInitialized = true;
+    }
 
     // Toast Function
-    function showToast(message) {
+    function showToast(message, isError = false) {
+      // Clear any existing toasts first
+      const existingToasts = document.querySelectorAll('#toast-container > div');
+      existingToasts.forEach(toast => toast.remove());
+
       const toast = document.createElement('div');
-      toast.className =
-        'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300';
+      toast.className = `fixed top-4 right-4 p-4 rounded-md shadow-md text-white z-50 transition-opacity duration-300 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
       toast.textContent = message;
       document.getElementById('toast-container').appendChild(toast);
+
       setTimeout(() => {
         toast.style.opacity = '1';
       }, 10);
+
       setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
       }, 3000);
-    }
-
-    // Confetti Function
-    function triggerConfetti() {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
     }
 
     // Trigger toast from flash messages
@@ -270,7 +234,85 @@
       showToast(toastMessage);
       history.replaceState({}, document.title, window.location.pathname);
     }
+
+    // Initialize favorites function
+    function initializeFavorites() {
+      // Remove any existing event listeners first by cloning the forms
+      document.querySelectorAll('form.favorite-form').forEach(form => {
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+      });
+
+      // Initialize favorite buttons based on their current state
+      document.querySelectorAll('form.favorite-form').forEach((form) => {
+        const button = form.querySelector('button');
+        // Set initial classes based on current text
+        if (button.textContent.includes('Remove')) {
+          button.classList.remove('text-orange-500');
+          button.classList.add('text-red-500');
+        } else {
+          button.classList.remove('text-red-500');
+          button.classList.add('text-orange-500');
+        }
+      });
+
+      // Add NEW event listeners
+      document.querySelectorAll('form.favorite-form').forEach((form) => {
+        form.addEventListener('submit', async function favoriteHandler(e) {
+          e.preventDefault();
+          const button = form.querySelector('button');
+
+          // Disable button during request to prevent double clicks
+          button.disabled = true;
+          const originalText = button.textContent;
+          button.textContent = '...';
+
+          try {
+            const formData = new FormData(form);
+            const response = await fetch(form.action, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+              }
+            });
+
+            if (!response.ok) throw new Error('Network error');
+            const data = await response.json();
+
+            if (data.success) {
+              if (data.action === 'added') {
+                button.textContent = 'Remove Favorite';
+                button.classList.remove('text-orange-500');
+                button.classList.add('text-red-500');
+                // Confetti effect
+                if (typeof confetti === 'function') {
+                  confetti({particleCount: 100, spread: 70, origin: {y: 0.6}});
+                }
+                showToast(data.message || 'Added to favorites!');
+              } else if (data.action === 'removed') {
+                button.textContent = 'Save to Favorites';
+                button.classList.remove('text-red-500');
+                button.classList.add('text-orange-500');
+                showToast(data.message || 'Removed from favorites!');
+              }
+            } else {
+              showToast(data.error || 'An error occurred', true);
+              // Revert button text on error
+              button.textContent = originalText;
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            showToast('An error occurred', true);
+            // Revert button text on error
+            button.textContent = originalText;
+          } finally {
+            // Re-enable button
+            button.disabled = false;
+          }
+        });
+      });
+    }
   });
 </script>
-  </body>
 </html>
