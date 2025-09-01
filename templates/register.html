@@ -30,4 +30,11 @@
     <a href="{{ url_for('login') }}" class="text-orange-500 hover:underline">Sign in</a>
   </p>
 </div>
+<script>
+  function togglePasswordVisibility(){
+    f = document.getElementById('password');
+    if(f.type == 'password'){
+      f.type = 'text'
+    } else( f.type = 'password')
+  }
 {% endblock %}
