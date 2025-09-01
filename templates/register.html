@@ -14,14 +14,16 @@
       <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
       <input type="text" id="username" name="username" class="mt-1 block w-full p-2 border rounded-md" required>
     </div>
-    <div class="mb-4">
+    <div class="mb-4 relative">
       <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-      <input type="password" id="password" name="password" class="mt-1 block w-full p-2 border rounded-md" required>
-      <span class="absolute right-3 top-9 cursor-pointer" onclick="togglePasswordVisibility()">
-        <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 3C5 3 1.73 7.11 1.73 7.11a1 1 0 000 1.78C2.91 10.89 6.09 14 10 14s7.09-3.11 8.27-5.11a1 1 0 000-1.78S15 3 10 3zM10 12a3 3 0 110-6 3 3 0 010 6z" />
-        </svg>
-      </span>
+      <div class="relative">
+        <input type="password" id="password" name="password" class="mt-1 block w-full p-2 border rounded-md pr-10" required>
+        <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none" onclick="togglePasswordVisibility()">
+          <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 3C5 3 1.73 7.11 1.73 7.11a1 1 0 000 1.78C2.91 10.89 6.09 14 10 14s7.09-3.11 8.27-5.11a1 1 0 000-1.78S15 3 10 3zM10 12a3 3 0 110-6 3 3 0 010 6z" />
+          </svg>
+        </button>
+      </div>
     </div>
     <button type="submit" class="w-full bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">Register</button>
   </form>
@@ -31,14 +33,17 @@
   </p>
 </div>
 <script>
-  function togglePasswordVisibility(){
-    f = document.getElementById('password');
-    if(f.type == 'password'){
-      f.type = 'text'
-    } else( f.type = 'password')
+  function togglePasswordVisibility() {
+    const passwordField = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    if (passwordField.type === 'password') {
+      passwordField.type = 'text';
+      eyeIcon.innerHTML = '<path d="M10 3C5 3 1.73 7.11 1.73 7.11a1 1 0 000 1.78C2.91 10.89 6.09 14 10 14s7.09-3.11 8.27-5.11a1 1 0 000-1.78S15 3 10 3zM10 12a3 3 0 110-6 3 3 0 010 6z" />';
+    } else {
+      passwordField.type = 'password';
+      eyeIcon.innerHTML = '<path d="M10 3C5 3 1.73 7.11 1.73 7.11a1 1 0 000 1.78C2.91 10.89 6.09 14 10 14s7.09-3.11 8.27-5.11a1 1 0 000-1.78S15 3 10 3zM10 12a3 3 0 110-6 3 3 0 010 6z" />';
+    }
   }
-<<<<<<< HEAD
+</script>
 {% endblock %}
-=======
-{% endblock %}
->>>>>>> d08bfaf454a6f949f9fbd3ef3d406a84d28375e7
