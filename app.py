@@ -274,7 +274,7 @@ def delete_comment(comment_id):
 
     comment = get_comment_by_id(comment_id)
     if not comment or comment["user_id"] != session["user_id"]:
-        return jsonify({"success": False, "error": "Not authorized"}), 403
+        return jsonify({"success": False, "error": "Comment deleted"}), 403
 
     delete_comment_from_db(comment_id)
 
