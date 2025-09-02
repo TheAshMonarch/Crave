@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from flask_wtf.csrf import CSRFProtect
+from flask_login import login_required
 import logging
 
 app = Flask(__name__)
@@ -223,48 +224,30 @@ def recipe_detail(recipe_id):
         return f"Server error: {str(e)}", 500
     
 @app.route('/favorite/<int:recipe_id>', methods=['POST'])
+@login_required
 def add_favorite(recipe_id):
-    from database import get_db
-    if 'user_id' not in session:
-        # Return error if the user is not logged in
-        return jsonify({'success': False, 'error': 'You need to log in to perform this action.'}), 401
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    try:
-        db = get_db()
-        cursor = db.cursor()
+    # Check if already favorite
+    cursor.execute("SELECT 1 FROM favorites WHERE user_id = ? AND recipe_id = ?", (user_id, recipe_id))
+    exists = cursor.fetchone()
 
-        # Check if the recipe is already in the user's favorites
-        cursor.execute(
-            "SELECT 1 FROM favorites WHERE user_id = ? AND recipe_id = ?",
-            (session['user_id'], recipe_id)
-        )
-        is_favorited = bool(cursor.fetchone())
-
-        if is_favorited:
-            # Remove from favorites if already favorited
-            cursor.execute(
-                "DELETE FROM favorites WHERE user_id = ? AND recipe_id = ?",
-                (session['user_id'], recipe_id)
-            )
-            db.commit()
-            action = 'removed'
-            message = 'Recipe removed from favorites.'
-        else:
-            # Add to favorites if not already favorited
-            cursor.execute(
-                "INSERT INTO favorites (user_id, recipe_id) VALUES (?, ?)",
-                (session['user_id'], recipe_id)
-            )
-            db.commit()
-            action = 'added'
-            message = 'Recipe added to favorites.'
-
-        # Return success response
-        return jsonify({'success': True, 'action': action, 'message': message})
-
-    except Exception as e:
-        app.logger.error(f"Error in add_favorite: {str(e)}")
-        return jsonify({'success': False, 'error': 'An error occurred while updating favorites.'}), 500
+    if exists:
+        cursor.execute("DELETE FROM favorites WHERE user_id = ? AND recipe_id = ?", (user_id, recipe_id))
+        conn.commit()
+        conn.close()
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": True, "action": "removed", "message": "Removed from favorites"})
+        return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+    else:
+        cursor.execute("INSERT INTO favorites (user_id, recipe_id) VALUES (?, ?)", (user_id, recipe_id))
+        conn.commit()
+        conn.close()
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": True, "action": "added", "message": "Saved to favorites"})
+        return redirect(url_for('recipe_detail', recipe_id=recipe_id))
     
 @app.route("/delete_comment/<int:comment_id>", methods=["POST"])
 def delete_comment(comment_id):
