@@ -118,11 +118,7 @@
     </style>
   </head>
 
-  <body class="bg-white text-gray-800 min-h-screen">
-    <div class="cloud" aria-hidden="true"></div>
-    <div class="cloud" aria-hidden="true"></div>
-    <div class="cloud" aria-hidden="true"></div>
-
+<body class="bg-white text-gray-800 min-h-screen overflow-x-hidden">
     <nav class="bg-white shadow-md sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <div class="flex items-center gap-2">
@@ -183,7 +179,7 @@
       </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-6 py-12">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-12 overflow-x-hidden"">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
           <div class="toast-container">
