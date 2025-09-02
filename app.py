@@ -214,8 +214,8 @@ def recipe_detail(recipe_id):
         return render_template(
             'recipe_detail.html',
             recipe=recipe,
-            comments=comments  
-            user_id=session.get("user_id")
+            comments=comments  ,
+            user_id=session.get("user_id"),
             user_favorites_ids=user_favorites_ids,
         )
     except Exception as e:
