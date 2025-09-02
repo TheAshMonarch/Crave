@@ -43,7 +43,7 @@ def init_db():
         cursor.execute('''
                        CREATE TABLE IF NOT EXISTS comments(
                            id INTEGER PRIMARY KEY,
-                           user_id INTEGER,
+                           user_id INTEGER,    
                            recipe_id INTEGER,
                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                            comment_text TEXT,
@@ -100,12 +100,12 @@ def add_favorite(user_id, recipe_id):
     )
     db.commit()
 
-def add_comment(user_id, recipe_id, comment):
+def add_comment(user_id, recipe_id, comment_text):
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-                   "INSERT INTO comments (user_id, recipe_id, comment) VALUES (?, ?, ?)"
-                   (user_id, recipe_id, comment)
+                   "INSERT INTO comment (user_id, recipe_id, comment_text  ) VALUES (?, ?, ?)"
+                   (user_id, recipe_id, comment_text)
     )
     db.commit()
     
