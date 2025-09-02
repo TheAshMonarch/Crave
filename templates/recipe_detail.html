@@ -49,7 +49,7 @@
     <div id="comments-container">
       {% include 'partials/_comments.html' %}
     </div>
-    <form action="{{ url_for('add_comment', recipe_id=recipe.id) }}" method="POST" class="comment-form mt-4">
+    <form action="{{ url_for('add_comment_route', recipe_id=recipe.id) }}" method="POST" class="comment-form mt-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <textarea name="comment_text" rows="3" class="w-full p-2 border rounded-md" placeholder="Add a comment..." required></textarea>
       <button type="submit" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 mt-2">Post Comment</button>
