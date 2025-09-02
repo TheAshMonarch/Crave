@@ -5,7 +5,7 @@
         <span class="text-sm text-gray-500">{{ comment.created_at }}</span>
     </div>
     <p class="text-gray-700">{{ comment.comment_text }}</p>
-    {% if session.user_id == comment.user_id %}
+    {% if user_id == comment.user_id %}
     <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" class="delete-comment-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <button type="submit" class="text-red-500 hover:underline text-sm">Delete</button>

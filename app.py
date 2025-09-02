@@ -214,8 +214,9 @@ def recipe_detail(recipe_id):
         return render_template(
             'recipe_detail.html',
             recipe=recipe,
-            user_favorites_ids=user_favorites_ids,
             comments=comments  
+            user_id=session.get("user_id")
+            user_favorites_ids=user_favorites_ids,
         )
     except Exception as e:
         app.logger.error(f"Recipe detail error: {str(e)}")
@@ -265,24 +266,24 @@ def add_favorite(recipe_id):
         app.logger.error(f"Error in add_favorite: {str(e)}")
         return jsonify({'success': False, 'error': 'An error occurred while updating favorites.'}), 500
     
-@app.route('/delete_comment/<int:comment_id>', methods=['POST'])
-def delete_comment(comment_id):
-    if 'user_id' not in session:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': False, 'error': 'Login required'}), 401
-        return redirect(url_for('login'))
+@app.route("/delete_comment/<int:comment_id>", methods=["POST"])
+def delete_comment_route(comment_id):
     from database import get_comment_by_id, delete_comment_from_db, get_comments_for_recipe
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Login required"}), 401
+
     comment = get_comment_by_id(comment_id)
-    if not comment or comment['user_id'] != session['user_id']:
-        return jsonify({'success': False, 'error': 'Not authorized'}), 403
-    recipe_id = comment['recipe_id']
+    if not comment or comment["user_id"] != session["user_id"]:
+        return jsonify({"success": False, "error": "Not authorized"}), 403
+
     delete_comment_from_db(comment_id)
-    comments = get_comments_for_recipe(recipe_id)
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        rendered_comments = render_template("partials/_comments.html", comments=comments)
-        return jsonify({'success': True, 'html': rendered_comments, 'message': 'Comment deleted'})
-    flash('Comment deleted')
-    return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+
+    comments = get_comments_for_recipe(comment["recipe_id"])
+    return jsonify({
+        "success": True,
+        "html": render_template("partials/_comments.html", comments=comments, user_id=session.get("user_id")),
+        "message": "Comment deleted"
+    })
 
 @app.route('/search')
 def search():
@@ -447,38 +448,25 @@ def copy_share_link(recipe_id):
     
 # In app.py, add this new route:
 
-@app.route('/add_comment/<int:recipe_id>', methods=['POST'])
-def add_comment(recipe_id):
-    if 'user_id' not in session:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': False, 'error': 'Login required'}), 401
-        return redirect(url_for('login'))
-    
-    try:
-        comment_text = request.form.get('comment', '').strip()
-        if not comment_text:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'success': False, 'error': 'Comment cannot be empty'}), 400
-            flash('Comment cannot be empty!')
-            return redirect(url_for('recipe_detail', recipe_id=recipe_id))
-        
-        from database import add_comment, get_comments_for_recipe
-        add_comment(session['user_id'], recipe_id, comment_text)
-        comments = get_comments_for_recipe(recipe_id)
+@app.route("/add_comment/<int:recipe_id>", methods=["POST"])
+def add_comment_route(recipe_id):
+    from database import add_comment, get_comments_for_recipe
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Login required"}), 401
 
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            rendered_comments = render_template("partials/_comments.html", comments=comments)
-            return jsonify({'success': True, 'html': rendered_comments, 'message': 'Comment added successfully!'})
+    comment_text = request.form.get("comment_text")
+    if not comment_text:
+        return jsonify({"success": False, "error": "Comment cannot be empty"}), 400
 
-        flash('Comment added successfully!')
-        return redirect(url_for('recipe_detail', recipe_id=recipe_id))
-        
-    except Exception as e:
-        app.logger.error(f"Add comment error: {str(e)}")
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': False, 'error': 'An error occurred'}), 500
-        flash('An error occurred while adding the comment.')
-        return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+    add_comment(session["user_id"], recipe_id, comment_text)
+
+    comments = get_comments_for_recipe(recipe_id)
+    return jsonify({
+        "success": True,
+        "html": render_template("partials/_comments.html", comments=comments, user_id=session.get("user_id")),
+        "message": "Comment added successfully!"
+    })
+
 
 
 if __name__ == "__main__":
