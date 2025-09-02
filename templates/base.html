@@ -1,325 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Recipe App{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <title>
-      {% block title %}
-        Crave - My Recipes
-      {% endblock %}
-    </title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
-    <script src="{{ url_for('static', filename='js/comments.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-        overflow-x: hidden;
-      }
-      .cloud {
-        position: absolute;
-        background-color: #5b6777;
-        border-radius: 50%;
-        opacity: 0.8;
-        filter: blur(20px);
-        animation: float 12s ease-in-out infinite;
-        z-index: -1;
-        will-change: transform;
-      }
-      .cloud:nth-child(1) {
-        width: 200px;
-        height: 80px;
-        top: 20%;
-        left: 10%;
-        animation-delay: 0s;
-      }
-      .cloud:nth-child(2) {
-        width: 300px;
-        height: 100px;
-        top: 40%;
-        left: 60%;
-        animation-delay: 3s;
-      }
-      .cloud:nth-child(3) {
-        width: 250px;
-        height: 90px;
-        top: 70%;
-        left: 30%;
-        animation-delay: 6s;
-      }
-      @keyframes float {
-        0%,
-        100% {
-          transform: translateY(0px);
-        }
-        50% {
-          transform: translateY(-20px);
-        }
-      }
-      .nav-link {
-        position: relative;
-      }
-      .nav-link::after {
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 2px;
-        bottom: -2px;
-        left: 0;
-        background-color: #f97316;
-        transition: width 0.3s ease;
-      }
-      .nav-link:hover::after {
-        width: 100%;
-      }
-      .desktop-menu {
-        display: flex;
-      }
-      .mobile-menu {
-        display: none;
-      }
-      #mobile-nav {
-        display: none;
-        transform: scaleY(0);
-        transform-origin: top;
-        opacity: 0;
-        transition: transform 0.3s ease, opacity 0.3s ease;
-      }
-      #mobile-nav:not(.hidden) {
-        display: flex;
-        transform: scaleY(1);
-        opacity: 1;
-      }
-      @media (max-width: 768px) {
-        .desktop-menu {
-          display: none !important;
-        }
-        .mobile-menu {
-          display: block !important;
-        }
-        #mobile-nav:not(.hidden) {
-          display: flex;
-          transform: scaleY(1);
-          height: auto;
-        }
-        #menu-btn {
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 0.5rem;
-        }
-      }
-    </style>
-  </head>
-
+    <script defer src="{{ url_for('static', filename='js/comments.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/nav.js') }}"></script>
+</head>
 <body class="bg-white text-gray-800 min-h-screen overflow-x-hidden w-full max-w-full">
-    <nav class="bg-white shadow-md sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <div class="h-10 w-10">
-            <img src="{{ url_for('static', filename='images/mascot.png') }}" alt="Crave Logo" class="h-full w-full object-contain" />
-          </div>
-          <span class="text-xl font-bold">Crave</span>
-        </div>
-        <ul class="desktop-menu flex items-center gap-6 text-sm font-medium">
-          <li>
-            <a href="{{ url_for('home') }}" class="nav-link hover:text-orange-500">Home</a>
-          </li>
-          <li>
-            <a href="{{ url_for('view_recipes') }}" class="nav-link hover:text-orange-500">Recipes</a>
-          </li>
-          <li>
-            <a href="{{ url_for('view_favorites') }}" class="nav-link hover:text-orange-500">Favorites</a>
-          </li>
-          <li>
-            <a href="{{ url_for('profile') }}" class="nav-link hover:text-orange-500">Profile</a>
-          </li>
-          <li>
-            <a href="{{ url_for('add_recipe') }}" class="nav-link hover:text-orange-500">Add Recipe</a>
-          </li>
-          {% if session.user_id %}
-            <li>
-              <a href="{{ url_for('logout') }}" class="nav-link hover:text-orange-500">Logout</a>
-            </li>
-          {% else %}
-            <li>
-              <a href="{{ url_for('login') }}" class="nav-link hover:text-orange-500">Login</a>
-            </li>
-            <li>
-              <a href="{{ url_for('register') }}" class="nav-link hover:text-orange-500">Register</a>
-            </li>
-          {% endif %}
-        </ul>
-        <div class="mobile-menu">
-          <button id="menu-btn" class="focus:outline-none" aria-label="Toggle navigation menu">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div id="mobile-nav" class="hidden flex-col px-6 pb-4 space-y-2 bg-white shadow-md">
-        <a href="{{ url_for('home') }}" class="nav-link hover:text-orange-500">Home</a>
-        <a href="{{ url_for('view_recipes') }}" class="nav-link hover:text-orange-500">Recipes</a>
-        <a href="{{ url_for('view_favorites') }}" class="nav-link hover:text-orange-500">Favorites</a>
-        <a href="{{ url_for('profile') }}" class="nav-link hover:text-orange-500">Profile</a>
-        <a href="{{ url_for('add_recipe') }}" class="nav-link hover:text-orange-500">Add Recipe</a>
-        {% if session.user_id %}
-          <a href="{{ url_for('logout') }}" class="nav-link hover:text-orange-500">Logout</a>
-        {% else %}
-          <a href="{{ url_for('login') }}" class="nav-link hover:text-orange-500">Login</a>
-          <a href="{{ url_for('register') }}" class="nav-link hover:text-orange-500">Register</a>
-        {% endif %}
-      </div>
-    </nav>
+    <!-- Background Blobs -->
+    <div class="absolute top-0 left-0 w-40 h-40 sm:w-64 sm:h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+    <div class="absolute top-0 right-0 w-40 h-40 sm:w-64 sm:h-64 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+    <div class="absolute bottom-0 left-5 w-40 h-40 sm:w-64 sm:h-64 bg-yellow-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-12 overflow-x-hidden"">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-          <div class="toast-container">
-              {% for category, message in messages %}
-                  <div class="toast {{ category }}">{{ message }}</div>
-              {% endfor %}
-          </div>
-      {% endif %}
-      {% endwith %}
-      {% block content %}
-      {% endblock %}
+    <!-- Navbar -->
+    <header class="relative z-10">
+        <nav class="flex justify-between items-center py-4 px-4 sm:px-6 bg-white shadow">
+            <!-- Logo -->
+            <a href="{{ url_for('index') }}" class="text-2xl font-bold text-orange-500">RecipeApp</a>
+
+            <!-- Desktop Menu -->
+            <ul class="hidden md:flex space-x-6">
+                <li><a href="{{ url_for('recipes') }}" class="hover:text-orange-500">Recipes</a></li>
+                {% if session.get('user_id') %}
+                    <li><a href="{{ url_for('profile') }}" class="hover:text-orange-500">Profile</a></li>
+                    <li><a href="{{ url_for('favorites') }}" class="hover:text-orange-500">Favorites</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="hover:text-orange-500">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}" class="hover:text-orange-500">Login</a></li>
+                    <li><a href="{{ url_for('register') }}" class="hover:text-orange-500">Register</a></li>
+                {% endif %}
+            </ul>
+
+            <!-- Mobile Menu Button -->
+            <button id="menu-btn" class="md:hidden text-2xl focus:outline-none">
+                ☰
+            </button>
+        </nav>
+
+        <!-- Mobile Nav -->
+        <div id="mobile-nav" class="hidden md:hidden bg-white shadow-lg">
+            <ul class="flex flex-col space-y-2 py-4 px-6">
+                <li><a href="{{ url_for('recipes') }}" class="hover:text-orange-500">Recipes</a></li>
+                {% if session.get('user_id') %}
+                    <li><a href="{{ url_for('profile') }}" class="hover:text-orange-500">Profile</a></li>
+                    <li><a href="{{ url_for('favorites') }}" class="hover:text-orange-500">Favorites</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="hover:text-orange-500">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}" class="hover:text-orange-500">Login</a></li>
+                    <li><a href="{{ url_for('register') }}" class="hover:text-orange-500">Register</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        {% block content %}{% endblock %}
     </main>
 
-    <div id="toast-container" class="fixed top-4 right-4 z-50"></div>
-<script>
-  // Flag to track if we've already initialized
-  let favoritesInitialized = false;
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 px-4 py-2 rounded-lg text-white shadow-lg z-50"></div>
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.getElementById('menu-btn');
-    const mobileNav = document.getElementById('mobile-nav');
-    if (menuBtn && mobileNav) {
-      menuBtn.addEventListener('click', () => {
-        mobileNav.classList.toggle('hidden');
-      });
-    }
-
-    // Only initialize favorites once
-    if (!favoritesInitialized) {
-      initializeFavorites();
-      favoritesInitialized = true;
-    }
-
-    // Toast Function
-    function showToast(message, isError = false) {
-      // Clear any existing toasts first
-      const existingToasts = document.querySelectorAll('#toast-container > div');
-      existingToasts.forEach(toast => toast.remove());
-
-      const toast = document.createElement('div');
-      toast.className = `fixed top-4 right-4 p-4 rounded-md shadow-md text-white z-50 transition-opacity duration-300 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
-      toast.textContent = message;
-      document.getElementById('toast-container').appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '1';
-      }, 10);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-
-    // Trigger toast from flash messages
-    {% set flashed_messages = get_flashed_messages() %}
-    const toastMessage = "{% if flashed_messages %}{{ flashed_messages[0] }}{% endif %}";
-    if (toastMessage) {
-      showToast(toastMessage);
-      history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    // Initialize favorites function
-    function initializeFavorites() {
-      // Remove any existing event listeners first by cloning the forms
-      document.querySelectorAll('form.favorite-form').forEach(form => {
-        const newForm = form.cloneNode(true);
-        form.parentNode.replaceChild(newForm, form);
-      });
-
-      // Initialize favorite buttons based on their current state
-      document.querySelectorAll('form.favorite-form').forEach((form) => {
-        const button = form.querySelector('button');
-        // Set initial classes based on current text
-        if (button.textContent.includes('Remove')) {
-          button.classList.remove('text-orange-500');
-          button.classList.add('text-red-500');
-        } else {
-          button.classList.remove('text-red-500');
-          button.classList.add('text-orange-500');
+    <!-- Favorites Handler (global) -->
+    <script>
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            toast.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
         }
-      });
 
-      // Add NEW event listeners
-      document.querySelectorAll('form.favorite-form').forEach((form) => {
-        form.addEventListener('submit', async function favoriteHandler(e) {
-          e.preventDefault();
-          const button = form.querySelector('button');
+        function initializeFavorites() {
+            document.querySelectorAll('.favorite-form').forEach(form => {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const button = form.querySelector('.favorite-btn');
+                    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
 
-          // Disable button during request to prevent double clicks
-          button.disabled = true;
-          const originalText = button.textContent;
-          button.textContent = '...';
-
-          try {
-            const formData = new FormData(form);
-            const response = await fetch(form.action, {
-              method: 'POST',
-              body: formData,
-              headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-              }
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `csrf_token=${encodeURIComponent(csrfToken)}`
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            if (data.action === 'added') {
+                                button.textContent = 'Remove Favorite';
+                                button.classList.remove('text-orange-500');
+                                button.classList.add('text-red-500');
+                                if (typeof confetti === 'function') {
+                                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                                }
+                            } else {
+                                button.textContent = 'Save to Favorites';
+                                button.classList.remove('text-red-500');
+                                button.classList.add('text-orange-500');
+                            }
+                            showToast(data.message || 'Updated favorites');
+                        } else {
+                            showToast(data.error || 'An error occurred', true);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showToast('An error occurred', true);
+                    }
+                });
             });
+        }
 
-            if (!response.ok) throw new Error('Network error');
-            const data = await response.json();
-
-            if (data.success) {
-              if (data.action === 'added') {
-                button.textContent = 'Remove Favorite';
-                button.classList.remove('text-orange-500');
-                button.classList.add('text-red-500');
-                // Confetti effect
-                if (typeof confetti === 'function') {
-                  confetti({particleCount: 100, spread: 70, origin: {y: 0.6}});
-                }
-                showToast(data.message || 'Added to favorites!');
-              } else if (data.action === 'removed') {
-                button.textContent = 'Save to Favorites';
-                button.classList.remove('text-red-500');
-                button.classList.add('text-orange-500');
-                showToast(data.message || 'Removed from favorites!');
-              }
-            } else {
-              showToast(data.error || 'An error occurred', true);
-              // Revert button text on error
-              button.textContent = originalText;
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFavorites();
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileNav = document.getElementById('mobile-nav');
+            if (menuBtn && mobileNav) {
+                menuBtn.addEventListener('click', () => {
+                    mobileNav.classList.toggle('hidden');
+                });
             }
-          } catch (error) {
-            console.error('Error:', error);
-            showToast('An error occurred', true);
-            // Revert button text on error
-            button.textContent = originalText;
-          } finally {
-            // Re-enable button
-            button.disabled = false;
-          }
         });
-      });
-    }
-  });
-</script>
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</body>
 </html>
