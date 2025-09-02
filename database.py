@@ -95,7 +95,7 @@ def add_favorite(user_id, recipe_id):
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO favorites (user_id, recipe_id) VALUES (?, ?)",
+        "INSERT OR IGNORE INTO favorites (user_id, recipe_id) VALUES (?, ?)",
         (user_id, recipe_id)
     )
     db.commit()
