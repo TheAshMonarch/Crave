@@ -9,6 +9,56 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <script defer src="{{ url_for('static', filename='js/comments.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/nav.js') }}"></script>
+    <style>
+          /* App Buttons (consistent orange style, responsive) */
+    button.post-comment,
+    button.delete-comment,
+    button.recipe-action,
+    button.login-btn,
+    button.register-btn,
+    button.add-recipe-btn,
+    button.edit-recipe-btn {
+      background-color: #f97316; /* Tailwind orange-500 */
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 1rem;
+      transition: background 0.2s ease-in-out;
+      width: auto; /* default on desktop */
+      display: inline-block;
+      text-align: center;
+    }
+
+    /* Hover effect */
+    button.post-comment:hover,
+    button.delete-comment:hover,
+    button.recipe-action:hover,
+    button.login-btn:hover,
+    button.register-btn:hover,
+    button.add-recipe-btn:hover,
+    button.edit-recipe-btn:hover {
+      background-color: #ea580c; /* Tailwind orange-600 */
+    }
+
+    /* Responsive behavior for mobile */
+    @media (max-width: 768px) {
+      button.post-comment,
+      button.delete-comment,
+      button.recipe-action,
+      button.login-btn,
+      button.register-btn,
+      button.add-recipe-btn,
+      button.edit-recipe-btn {
+        width: 100%;      /* stretch full width */
+        font-size: 1.1rem;
+        padding: 1rem;    /* bigger tap target */
+        margin-top: 0.5rem;
+      }
+    }
+    </style>
 </head>
 <body class="bg-white text-gray-800 min-h-screen overflow-x-hidden w-full max-w-full">
     <!-- Background Blobs -->

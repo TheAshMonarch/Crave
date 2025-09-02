@@ -52,7 +52,7 @@
     <form action="{{ url_for('add_comment_route', recipe_id=recipe.id) }}" method="POST" class="comment-form mt-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <textarea name="comment_text" rows="3" class="w-full p-2 border rounded-md" placeholder="Add a comment..." required></textarea>
-      <button type="submit" class="relative z-50 !bg-orange-500 text-white p-2 rounded-md shadow-md hover:bg-orange-600 mt-2">Post Comment</button>
+      <button type="submit" class="post-comment mt-2">Post Comment</button>
     </form>
   </div>
 </div>
