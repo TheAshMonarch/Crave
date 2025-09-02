@@ -104,10 +104,11 @@ def add_comment(user_id, recipe_id, comment_text):
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-                   "INSERT INTO comment (user_id, recipe_id, comment_text  ) VALUES (?, ?, ?)"
-                   (user_id, recipe_id, comment_text)
+        "INSERT INTO comments (user_id, recipe_id, comment_text) VALUES (?, ?, ?)",
+        (user_id, recipe_id, comment_text)
     )
     db.commit()
+
     
 def get_comments_for_recipe(recipe_id):
     db = get_db()
