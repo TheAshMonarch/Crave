@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Recipe App{% endblock %}</title>
+    <title>{% block title %}CRAVE{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
@@ -20,8 +20,15 @@
     <header class="relative z-10">
         <nav class="flex justify-between items-center py-4 px-4 sm:px-6 bg-white shadow">
             <!-- Logo -->
-            <a href="{{ url_for('home') }}" class="text-2xl font-bold text-orange-500">RecipeApp</a>
+            <a href="{{ url_for('home') }}" class="flex items-center space-x-2">
+              <!-- Logo image -->
+              <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                  alt="Crave Logo" 
+                  class="h-8 w-8 object-contain">
 
+              <!-- App name -->
+              <span class="text-2xl font-bold text-orange-500">Crave</span>
+            </a>
             <!-- Desktop Menu -->
             <ul class="hidden md:flex space-x-6">
                 <li><a href="{{ url_for('view_recipes') }}" class="hover:text-orange-500">Recipes</a></li>
