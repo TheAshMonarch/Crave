@@ -264,6 +264,25 @@ def add_favorite(recipe_id):
     except Exception as e:
         app.logger.error(f"Error in add_favorite: {str(e)}")
         return jsonify({'success': False, 'error': 'An error occurred while updating favorites.'}), 500
+    
+@app.route('/delete_comment/<int:comment_id>', methods=['POST'])
+def delete_comment(comment_id):
+    if 'user_id' not in session:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': 'Login required'}), 401
+        return redirect(url_for('login'))
+    from database import get_comment_by_id, delete_comment_from_db, get_comments_for_recipe
+    comment = get_comment_by_id(comment_id)
+    if not comment or comment['user_id'] != session['user_id']:
+        return jsonify({'success': False, 'error': 'Not authorized'}), 403
+    recipe_id = comment['recipe_id']
+    delete_comment_from_db(comment_id)
+    comments = get_comments_for_recipe(recipe_id)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        rendered_comments = render_template("partials/_comments.html", comments=comments)
+        return jsonify({'success': True, 'html': rendered_comments, 'message': 'Comment deleted'})
+    flash('Comment deleted')
+    return redirect(url_for('recipe_detail', recipe_id=recipe_id))
 
 @app.route('/search')
 def search():

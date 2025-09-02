@@ -169,6 +169,19 @@ def get_user_recipes(user_id):
     cursor.execute("SELECT * FROM recipes WHERE user_id = ?", (user_id,))
     return cursor.fetchall()
 
+def get_comment_by_id(comment_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM comments WHERE id = ?", (comment_id,))
+    return cursor.fetchone()
+
+def delete_comment_from_db(comment_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM comments WHERE id = ?", (comment_id,))
+    db.commit()
+
+
 def get_recipe_by_id(recipe_id):
     db = get_db()
     cursor = db.cursor()

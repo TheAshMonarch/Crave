@@ -10,9 +10,11 @@
       {% endblock %}
     </title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <script src="{{ url_for('static', filename='js/comments.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
       body {
@@ -182,6 +184,15 @@
     </nav>
 
     <main class="max-w-7xl mx-auto px-6 py-12">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+          <div class="toast-container">
+              {% for category, message in messages %}
+                  <div class="toast {{ category }}">{{ message }}</div>
+              {% endfor %}
+          </div>
+      {% endif %}
+      {% endwith %}
       {% block content %}
       {% endblock %}
     </main>
