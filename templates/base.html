@@ -47,7 +47,7 @@
                 <li><a href="{{ url_for('view_recipes') }}" class="hover:text-orange-500">Recipes</a></li>
                 {% if session.get('user_id') %}
                     <li><a href="{{ url_for('profile') }}" class="hover:text-orange-500">Profile</a></li>
-                    <li><a href="{{ url_for('favorites') }}" class="hover:text-orange-500">Favorites</a></li>
+                    <li><a href="{{ url_for('view_favorites') }}" class="hover:text-orange-500">Favorites</a></li>
                     <li><a href="{{ url_for('logout') }}" class="hover:text-orange-500">Logout</a></li>
                 {% else %}
                     <li><a href="{{ url_for('login') }}" class="hover:text-orange-500">Login</a></li>
