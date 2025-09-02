@@ -42,9 +42,9 @@ def init_db():
         ''')
         cursor.execute('''
                        CREATE TABLE IF NOT EXISTS comments(
-                           id INTERGER PRIMARY KEY,
-                           user_id INTERGER,
-                           recipe_id INTERGER,
+                           id INTEGER PRIMARY KEY,
+                           user_id INTEGER,
+                           recipe_id INTEGER,
                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                            comment_text TEXT,
                            FOREIGN KEY(recipe_id) REFERENCES recipes(id),
