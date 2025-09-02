@@ -48,7 +48,7 @@ def init_db():
                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                            comment_text TEXT,
                            FOREIGN KEY(recipe_id) REFERENCES recipes(id),
-                           FOREIGN KEY(user_id) REFERENCES users(id),
+                           FOREIGN KEY(user_id) REFERENCES users(id)
                            )
                         ''')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_recipes_user_id ON recipes(user_id)')
