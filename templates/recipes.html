@@ -8,16 +8,23 @@
     </div>
     <h1 class="text-2xl font-bold">Recipes</h1>
   </div>
-  <form method="GET" action="{{ url_for('search') }}" class="flex gap-2">
+
+  <!-- Search Form with Live Dropdown -->
+  <form method="GET" action="{{ url_for('search') }}" class="flex gap-2 relative w-full max-w-md">
     <input
       type="text"
+      id="search-input"
       name="query"
       placeholder="Search recipes..."
       class="w-full p-2 border rounded-md"
+      autocomplete="off"
     />
     <button type="submit" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
       Search
     </button>
+
+    <!-- Dropdown for live results -->
+    <div id="search-results" class="absolute top-full left-0 right-0 bg-white border rounded-md mt-1 shadow-lg hidden z-50"></div>
   </form>
 </div>
 
@@ -86,4 +93,47 @@
 {% endif %}
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<!-- Live Search Script -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("search-input");
+  const resultsContainer = document.getElementById("search-results");
+
+  if (!input) return;
+
+  input.addEventListener("input", async () => {
+    const query = input.value.trim();
+    if (!query) {
+      resultsContainer.innerHTML = "";
+      resultsContainer.classList.add("hidden");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/search_suggestions?q=${encodeURIComponent(query)}`);
+      const results = await res.json();
+
+      if (results.length === 0) {
+        resultsContainer.innerHTML = "<p class='p-2 text-gray-500'>No results</p>";
+      } else {
+        resultsContainer.innerHTML = results.map(r =>
+          `<a href="/recipe/${r.id}" class="block px-3 py-2 hover:bg-orange-100">${r.title}</a>`
+        ).join("");
+      }
+
+      resultsContainer.classList.remove("hidden");
+    } catch (err) {
+      console.error("Search error:", err);
+    }
+  });
+
+  // Hide dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!resultsContainer.contains(e.target) && e.target !== input) {
+      resultsContainer.classList.add("hidden");
+    }
+  });
+});
+</script>
 {% endblock %}
