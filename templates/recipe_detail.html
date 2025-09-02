@@ -145,20 +145,19 @@
                 
                 const data = await response.json();
                 
-                if (data.success) {
-                    // Clear the textarea
-                    form.querySelector('textarea').value = '';
-                    
-                    // Show success message
-                    showToast(data.message || 'Comment added successfully!');
-                    
-                    // Reload comments after a short delay
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    showToast(data.error || 'Error adding comment', true);
-                }
+            if (data.success) {
+                // Clear textarea
+                form.querySelector('textarea').value = '';
+
+                // Update comments container with new HTML
+                document.getElementById('comments-container').innerHTML = data.html;
+
+                // Show toast
+                showToast(data.message || 'Comment added successfully!');
+            } else {
+                showToast(data.error || 'Error adding comment', true);
+            }
+
             } catch (error) {
                 console.error('Error:', error);
                 showToast('An error occurred', true);

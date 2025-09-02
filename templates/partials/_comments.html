@@ -1,0 +1,11 @@
+{% for comment in comments %}
+<div class="bg-gray-50 p-4 rounded-md mb-4">
+  <div class="flex justify-between items-start mb-2">
+    <span class="font-semibold">{{ comment.username }}</span>
+    <span class="text-sm text-gray-500">{{ comment.created_at }}</span>
+  </div>
+  <p class="text-gray-700">{{ comment.comment_text }}</p>
+</div>
+{% else %}
+<p class="text-gray-600 text-center py-4">No comments yet. Be the first to comment!</p>
+{% endfor %}

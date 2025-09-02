@@ -334,6 +334,11 @@ def delete_recipe(recipe_id):
     try:
         recipe = get_recipe_by_id(recipe_id)
         if recipe and recipe['user_id'] == session['user_id']:
+            # Delete image file if it exists
+            if recipe['image']:
+                image_path = os.path.join(app.config['UPLOAD_FOLDER'], recipe['image'])
+                if os.path.exists(image_path):
+                    os.remove(image_path)
             delete_recipe_from_db(recipe_id)
             flash('Recipe deleted!')
             app.logger.info(f"Recipe deleted: {recipe_id}")
@@ -341,6 +346,7 @@ def delete_recipe(recipe_id):
     except Exception as e:
         app.logger.error(f"Delete recipe error: {str(e)}")
         return f"Server error: {str(e)}", 500
+
 
 @app.route('/profile')
 def profile():
@@ -437,12 +443,14 @@ def add_comment(recipe_id):
             flash('Comment cannot be empty!')
             return redirect(url_for('recipe_detail', recipe_id=recipe_id))
         
-        from database import add_comment
+        from database import add_comment, get_comments_for_recipe
         add_comment(session['user_id'], recipe_id, comment_text)
-        
+        comments = get_comments_for_recipe(recipe_id)
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': True, 'message': 'Comment added successfully'})
-        
+            rendered_comments = render_template("partials/_comments.html", comments=comments)
+            return jsonify({'success': True, 'html': rendered_comments, 'message': 'Comment added successfully!'})
+
         flash('Comment added successfully!')
         return redirect(url_for('recipe_detail', recipe_id=recipe_id))
         
@@ -452,6 +460,7 @@ def add_comment(recipe_id):
             return jsonify({'success': False, 'error': 'An error occurred'}), 500
         flash('An error occurred while adding the comment.')
         return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
