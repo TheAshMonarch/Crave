@@ -285,6 +285,22 @@ def delete_comment(comment_id):
         "message": "Comment deleted"
     })
 
+@app.route('/search_suggestions')
+def search_suggestions():
+    query = request.args.get('q', '').lower()
+    results = []
+
+    if query:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, title FROM recipes WHERE title LIKE ? LIMIT 5", (f"%{query}%",))
+        rows = cursor.fetchall()
+        conn.close()
+
+        results = [{"id": row["id"], "title": row["title"]} for row in rows]
+
+    return jsonify(results)
+
 @app.route('/search')
 def search():
     if 'user_id' not in session:
