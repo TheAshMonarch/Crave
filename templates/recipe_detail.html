@@ -81,6 +81,94 @@
     </form>
     {% endif %}
   </div>
+  <!-- Comments Section -->
+<div class="mt-8">
+    <h2 class="text-xl font-semibold mb-4">Comments</h2>
+    
+    <!-- Comment form -->
+    {% if session.user_id %}
+    <form action="{{ url_for('add_comment', recipe_id=recipe.id) }}" method="POST" class="comment-form mb-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="flex gap-2">
+            <textarea 
+                name="comment" 
+                placeholder="Add your comment..." 
+                class="flex-1 p-3 border rounded-md" 
+                rows="2"
+                required
+            ></textarea>
+            <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 self-end">
+                Post
+            </button>
+        </div>
+    </form>
+    {% else %}
+    <p class="text-gray-600 mb-6">Please <a href="{{ url_for('login') }}" class="text-orange-500 hover:underline">login</a> to leave a comment.</p>
+    {% endif %}
+    
+    <!-- Comments list -->
+    <div id="comments-container">
+        {% for comment in comments %}
+        <div class="bg-gray-50 p-4 rounded-md mb-4">
+            <div class="flex justify-between items-start mb-2">
+                <span class="font-semibold">{{ comment.username }}</span>
+                <span class="text-sm text-gray-500">{{ comment.created_at }}</span>
+            </div>
+            <p class="text-gray-700">{{ comment.comment_text }}</p>
+        </div>
+        {% else %}
+        <p class="text-gray-600 text-center py-4">No comments yet. Be the first to comment!</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add this script for AJAX comment submission -->
+<script>
+    document.querySelectorAll('.comment-form').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const button = form.querySelector('button');
+            const originalText = button.textContent;
+            
+            button.textContent = 'Posting...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Clear the textarea
+                    form.querySelector('textarea').value = '';
+                    
+                    // Show success message
+                    showToast(data.message || 'Comment added successfully!');
+                    
+                    // Reload comments after a short delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast(data.error || 'Error adding comment', true);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('An error occurred', true);
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        });
+    });
+</script>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>

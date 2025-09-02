@@ -2,7 +2,7 @@ import sqlite3
 from werkzeug.security import generate_password_hash
 from flask import g
 
-def get_db():
+def get_db(): 
     if 'db' not in g:
         g.db = sqlite3.connect('recipes.db')
         g.db.row_factory = sqlite3.Row
@@ -40,6 +40,17 @@ def init_db():
                 PRIMARY KEY (user_id, recipe_id)
             )
         ''')
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS comments(
+                           id INTERGER PRIMARY KEY,
+                           user_id INTERGER,
+                           recipe_id INTERGER,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           comment_text TEXT,
+                           FOREIGN KEY(recipe_id) REFERENCES recipes(id),
+                           FOREIGN KEY(user_id) REFERENCES users(id),
+                           )
+                        ''')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_recipes_user_id ON recipes(user_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_recipes_category ON recipes(category)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_recipes_tags ON recipes(tags)')
@@ -88,6 +99,27 @@ def add_favorite(user_id, recipe_id):
         (user_id, recipe_id)
     )
     db.commit()
+
+def add_comment(user_id, recipe_id, comment):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+                   "INSERT INTO comments (user_id, recipe_id, comment) VALUES (?, ?, ?)"
+                   (user_id, recipe_id, comment)
+    )
+    db.commit()
+    
+def get_comments_for_recipe(recipe_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        SELECT c.*, u.username 
+        FROM comments c 
+        JOIN users u ON c.user_id = u.id 
+        WHERE c.recipe_id = ? 
+        ORDER BY c.created_at DESC
+    ''', (recipe_id,))
+    return cursor.fetchall()
 
 def get_user_favorites(user_id):
     db = get_db()

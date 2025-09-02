@@ -193,7 +193,7 @@ def logout():
 
 @app.route('/recipe/<int:recipe_id>')
 def recipe_detail(recipe_id):
-    from database import get_recipe_by_id, get_user_favorites
+    from database import get_recipe_by_id, get_user_favorites, get_comments_for_recipe  # ADD get_comments_for_recipe
     if 'user_id' not in session:
         app.logger.info("No user_id in session, redirecting to login")
         return redirect(url_for('login'))
@@ -202,20 +202,25 @@ def recipe_detail(recipe_id):
         if not recipe:
             app.logger.error(f"Recipe not found: {recipe_id}")
             return "Recipe not found", 404
+        
         user_favorites_ids = [fav['id'] for fav in get_user_favorites(session['user_id'])]
+        comments = get_comments_for_recipe(recipe_id)  # ADD THIS LINE to get comments
+        
         app.logger.info(f"Recipe detail loaded: {recipe['title']}, favorites: {user_favorites_ids}")
         if recipe['image']:
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], recipe['image'])
             app.logger.info(f"Checking image for recipe {recipe_id}: {image_path}, exists: {os.path.exists(image_path)}")
+        
         return render_template(
             'recipe_detail.html',
             recipe=recipe,
-            user_favorites_ids=user_favorites_ids
+            user_favorites_ids=user_favorites_ids,
+            comments=comments  
         )
     except Exception as e:
         app.logger.error(f"Recipe detail error: {str(e)}")
         return f"Server error: {str(e)}", 500
-
+    
 @app.route('/favorite/<int:recipe_id>', methods=['POST'])
 def add_favorite(recipe_id):
     from database import get_db
@@ -414,6 +419,39 @@ def copy_share_link(recipe_id):
     except Exception as e:
         app.logger.error(f"Copy share link error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    
+# In app.py, add this new route:
+
+@app.route('/add_comment/<int:recipe_id>', methods=['POST'])
+def add_comment(recipe_id):
+    if 'user_id' not in session:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': 'Login required'}), 401
+        return redirect(url_for('login'))
+    
+    try:
+        comment_text = request.form.get('comment', '').strip()
+        if not comment_text:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': False, 'error': 'Comment cannot be empty'}), 400
+            flash('Comment cannot be empty!')
+            return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+        
+        from database import add_comment
+        add_comment(session['user_id'], recipe_id, comment_text)
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'message': 'Comment added successfully'})
+        
+        flash('Comment added successfully!')
+        return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+        
+    except Exception as e:
+        app.logger.error(f"Add comment error: {str(e)}")
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': 'An error occurred'}), 500
+        flash('An error occurred while adding the comment.')
+        return redirect(url_for('recipe_detail', recipe_id=recipe_id))
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
