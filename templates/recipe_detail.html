@@ -41,7 +41,7 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <button
     type="submit"
-    class="favorite-btn text-sm {% if recipe.id in user_favorites_ids %}text-red-500{% else %}text-orange-500{% endif %} hover:underline"
+    class="login-btn favorite-btn text-sm {% if recipe.id in user_favorites_ids %}text-red-500{% else %}text-orange-500{% endif %} hover:underline"
   >
     {% if recipe.id in user_favorites_ids %}Remove Favorite{% else %}Save to Favorites{% endif %}
   </button>
