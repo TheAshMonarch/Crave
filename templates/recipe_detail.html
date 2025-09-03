@@ -38,7 +38,7 @@
         {% if recipe.id in user_favorites_ids %}Remove Favorite{% else %}Save to Favorites{% endif %}
       </button>
     </form>
-    <button onclick="copyShareLink('{{ url_for('recipe_detail', recipe_id=recipe.id, _external=True) }}')" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
+    <button onclick="copyShareLink('{{ url_for('recipe_detail', recipe_id=recipe.id, _external=True) }}')" class="favorite-btn mt-2">
       Copy Share Link
     </button>
   </div>
