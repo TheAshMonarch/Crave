@@ -32,13 +32,17 @@
   <p class="text-xs text-gray-400 mt-2">By: {{ recipe.username }}</p>
 
   <div class="mt-6 flex gap-4">
-    <form action="{{ url_for('add_favorite', recipe_id=recipe.id) }}" method="POST" class="favorite-form" data-recipe-id="{{ recipe.id }}">
+    <!-- Favorite button reverted -->
+    <form action="{{ url_for('add_favorite', recipe_id=recipe.id) }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <button type="submit" class="favorite-btn text-sm {% if recipe.id in user_favorites_ids %}text-red-500{% else %}text-orange-500{% endif %}">
-        {% if recipe.id in user_favorites_ids %}Remove Favorite{% else %}Save to Favorites{% endif %}
+      <button type="submit" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
+        Save to Favorites
       </button>
     </form>
-    <button onclick="copyShareLink('{{ url_for('recipe_detail', recipe_id=recipe.id, _external=True) }}')" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
+
+    <!-- Share button restored -->
+    <button onclick="copyShareLink('{{ url_for('recipe_detail', recipe_id=recipe.id, _external=True) }}')" 
+      class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
       Copy Share Link
     </button>
   </div>
@@ -52,7 +56,9 @@
     <form action="{{ url_for('add_comment_route', recipe_id=recipe.id) }}" method="POST" class="comment-form mt-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <textarea name="comment_text" rows="3" class="w-full p-2 border rounded-md" placeholder="Add a comment..." required></textarea>
-      <button type="submit" class="post-comment mt-2">Post Comment</button>
+      <button type="submit" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 mt-2">
+        Post Comment
+      </button>
     </form>
   </div>
 </div>
@@ -62,72 +68,11 @@
     const toast = document.getElementById('toast');
     toast.textContent = message;
     toast.classList.remove('hidden');
+    toast.classList.remove('bg-red-500', 'bg-green-500');
     toast.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
     setTimeout(() => toast.classList.add('hidden'), 3000);
   }
 
-  // Favorite toggle (kept local; aligns with others)
-  document.querySelectorAll('.favorite-form').forEach(form => {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const button = form.querySelector('.favorite-btn');
-      const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-
-      try {
-        const response = await fetch(form.action, {
-          method: 'POST',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `csrf_token=${encodeURIComponent(csrfToken)}`
-        });
-        const data = await response.json();
-        if (data.success) {
-          if (data.action === 'added') {
-            button.textContent = 'Remove Favorite';
-            button.classList.remove('text-orange-500');
-            button.classList.add('text-red-500');
-            if (typeof confetti === 'function') {
-              confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-            }
-          } else {
-            button.textContent = 'Save to Favorites';
-            button.classList.remove('text-red-500');
-            button.classList.add('text-orange-500');
-          }
-          showToast(data.message || 'Updated favorites');
-        } else {
-          showToast(data.error || 'An error occurred', true);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        showToast('An error occurred', true);
-      }
-    });
-  });
-
-  // Delete comment (you can remove this block; comments.js now handles it too)
-  document.addEventListener("submit", async (e) => {
-    if (e.target.classList.contains("delete-comment-form")) {
-      e.preventDefault();
-      const form = e.target;
-      const response = await fetch(form.action, {
-        method: "POST",
-        body: new FormData(form),
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-      });
-      const data = await response.json();
-      if (data.success) {
-        document.getElementById('comments-container').innerHTML = data.html;
-        showToast(data.message || 'Comment deleted');
-      } else {
-        showToast(data.error || 'Error deleting comment', true);
-      }
-    }
-  });
-
-  // Copy share link (unchanged)
   function copyShareLink(url) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => {
@@ -152,5 +97,5 @@
     }
   }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
 {% endblock %}
