@@ -151,6 +151,29 @@
       document.body.removeChild(textArea);
     }
   }
+  function copyShareLink(url) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Share link copied!');
+      }).catch(err => {
+        console.error('Error copying link:', err);
+        showToast('Failed to copy link', true);
+      });
+    } else {
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Share link copied!');
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+        showToast('Failed to copy link', true);
+      }
+      document.body.removeChild(textArea);
+    }
+  }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 {% endblock %}
