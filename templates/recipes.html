@@ -30,7 +30,7 @@
 
 
   <!-- Back button after search -->
-  {% if request.args.get('query') %}
+  {% if request.args.get('query') or selected_category %}
   <div class="mt-4">
     <a href="{{ url_for('view_recipes') }}" class="text-orange-500 hover:underline">
       ← Back to All Recipes
