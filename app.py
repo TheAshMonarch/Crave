@@ -166,8 +166,9 @@ def view_recipes():
         user_favorites_ids = [fav['id'] for fav in get_user_favorites(session['user_id'])]
         app.logger.info(f"User favorites: {user_favorites_ids}")
 
-        # Distinct categories for chips
-        categories = list({r['category'] for r in get_all_recipes_with_users() if r.get('category')})
+        # ✅ Distinct categories for chips
+        categories = list({r['category'] for r in get_all_recipes_with_users() if r['category']})
+
 
         return render_template(
             'recipes.html',
