@@ -149,26 +149,35 @@ def add_recipe():
 
 @app.route('/recipes')
 def view_recipes():
-    from database import get_all_recipes_with_users, get_user_favorites  # Changed import
+    from database import get_all_recipes_with_users, get_user_favorites
     if 'user_id' not in session:
         app.logger.info("No user_id in session, redirecting to login")
         return redirect(url_for('login'))
     try:
         app.logger.info(f"Fetching recipes for user_id: {session['user_id']}")
+
+        # Pagination
         page = request.args.get('page', 1, type=int)
         per_page = 8
         offset = (page - 1) * per_page
 
-        # New: category filter
+        # Filters
         selected_category = request.args.get('category')
+        query = request.args.get('query', '').strip()
 
-        all_recipes = get_all_recipes_with_users()  # Use new function
+        # All recipes
+        all_recipes = get_all_recipes_with_users()
         app.logger.info(f"Retrieved {len(all_recipes)} recipes")
 
-        # Filter by category if selected
+        # Category filter
         if selected_category:
             all_recipes = [r for r in all_recipes if r['category'] == selected_category]
-            app.logger.info(f"Filtered recipes by category: {selected_category} → {len(all_recipes)} recipes")
+            app.logger.info(f"Filtered by category: {selected_category} → {len(all_recipes)} recipes")
+
+        # Search filter
+        if query:
+            all_recipes = [r for r in all_recipes if query.lower() in r['title'].lower()]
+            app.logger.info(f"Filtered by search query '{query}' → {len(all_recipes)} recipes")
 
         # Pagination
         paginated_recipes = all_recipes[offset:offset + per_page]
@@ -178,9 +187,8 @@ def view_recipes():
         user_favorites_ids = [fav['id'] for fav in get_user_favorites(session['user_id'])]
         app.logger.info(f"User favorites: {user_favorites_ids}")
 
-        # ✅ Distinct categories for chips
+        # Categories for chips
         categories = list({r['category'] for r in get_all_recipes_with_users() if r['category']})
-
 
         return render_template(
             'recipes.html',
@@ -189,7 +197,8 @@ def view_recipes():
             page=page,
             has_next=has_next,
             categories=categories,
-            selected_category=selected_category
+            selected_category=selected_category,
+            query=query  # so the input keeps its value
         )
     except Exception as e:
         app.logger.error(f"View recipes error: {str(e)}")

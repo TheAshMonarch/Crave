@@ -9,23 +9,25 @@
     <h1 class="text-2xl font-bold">Recipes</h1>
   </div>
 
-  <!-- Search Form with Live Dropdown -->
-  <form method="GET" action="{{ url_for('search') }}" class="flex gap-2 relative w-full max-w-md">
-    <input
-      type="text"
-      id="search-input"
-      name="query"
-      placeholder="Search recipes..."
-      class="w-full p-2 border rounded-md"
-      autocomplete="off"
-    />
-    <button type="submit" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
-      Search
-    </button>
+<!-- Search Form with Live Dropdown -->
+<form method="GET" action="{{ url_for('view_recipes') }}" class="flex gap-2 relative w-full max-w-md">
+  <input
+    type="text"
+    id="search-input"
+    name="query"
+    placeholder="Search recipes..."
+    value="{{ request.args.get('query', '') }}"
+    class="w-full p-2 border rounded-md"
+    autocomplete="off"
+  />
+  <button type="submit" class="bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600">
+    Search
+  </button>
 
-    <!-- Dropdown for live results -->
-    <div id="search-results" class="absolute top-full left-0 right-0 bg-white border rounded-md mt-1 shadow-lg hidden z-50"></div>
-  </form>
+  <!-- Dropdown for live results -->
+  <div id="search-results" class="absolute top-full left-0 right-0 bg-white border rounded-md mt-1 shadow-lg hidden z-50"></div>
+</form>
+
 
   <!-- Back button after search -->
   {% if request.args.get('query') %}
