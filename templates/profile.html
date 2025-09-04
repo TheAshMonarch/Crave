@@ -105,10 +105,25 @@
 
 <!-- Toggle Favorites Script -->
 <script>
+  function showToast(message, isError = false) {
+    const toast = document.getElementById('toast');
+    if (!toast) {
+      // create toast container if it doesn't exist
+      const newToast = document.createElement('div');
+      newToast.id = 'toast';
+      newToast.className = 'fixed top-4 right-4 p-4 rounded-md shadow-md text-white z-50 max-w-xs hidden';
+      document.body.appendChild(newToast);
+    }
+    const toastBox = document.getElementById('toast');
+    toastBox.textContent = message;
+    toastBox.classList.remove('hidden');
+    toastBox.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
+    setTimeout(() => toastBox.classList.add('hidden'), 3000);
+  }
+
   document.querySelectorAll('.favorite-form').forEach(form => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const button = form.querySelector('.favorite-btn');
       const csrfToken = form.querySelector('input[name="csrf_token"]').value;
 
       try {
@@ -124,12 +139,20 @@
         if (data.success) {
           if (data.action === 'removed') {
             form.closest('.bg-white').remove(); // remove card instantly
+            showToast('Removed from favorites');
+          } else if (data.action === 'added') {
+            // (unlikely on profile, but safe fallback)
+            showToast('Added to favorites');
           }
+        } else {
+          showToast(data.error || 'Error updating favorite', true);
         }
       } catch (error) {
         console.error('Error:', error);
+        showToast('An error occurred', true);
       }
     });
   });
 </script>
+
 {% endblock %}
