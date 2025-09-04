@@ -8,6 +8,19 @@
     </div>
     <h1 class="text-2xl font-bold">Login</h1>
   </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="p-2 mb-3 rounded 
+                  {% if category == 'error' %} bg-red-500 text-white
+                  {% elif category == 'success' %} bg-green-500 text-white
+                  {% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
   <form method="POST" action="{{ url_for('login') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <div class="mb-4">

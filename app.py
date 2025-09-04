@@ -41,33 +41,45 @@ def home():
     init_db()  # Initialize database on first load
     return render_template('index.html')
 
+from flask import flash
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     from database import get_user_by_username
     app.logger.info(f"Login attempt, method: {request.method}, form: {request.form}")
+    
     if request.method == 'POST':
         try:
             username = request.form.get('username', '').strip()
             password = request.form.get('password', '')
             app.logger.info(f"Attempting login for username: {username}")
+
             if not username or not password:
-                app.logger.error("Missing username or password")
-                return "Username and password are required", 400
+                flash("Username and password are required", "error")
+                return redirect(url_for('login'))
+
             user = get_user_by_username(username)
             app.logger.info(f"User query result: {user}")
+
             if user is None:
-                app.logger.error(f"No user found for username: {username}")
-                return "Invalid username or password", 401
+                flash("Invalid username or password", "error")
+                return redirect(url_for('login'))
+
             if check_password_hash(user['password'], password):
                 session['username'] = username
                 session['user_id'] = user['id']
                 app.logger.info(f"Login successful for {username}")
+                flash("Login successful!", "success")
                 return redirect(url_for('view_recipes'))
-            app.logger.error("Password check failed")
-            return "Invalid username or password", 401
+
+            flash("Invalid username or password", "error")
+            return redirect(url_for('login'))
+
         except Exception as e:
             app.logger.error(f"Login error: {str(e)}")
-            return f"Server error: {str(e)}", 500
+            flash("Server error. Please try again.", "error")
+            return redirect(url_for('login'))
+
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
