@@ -27,6 +27,22 @@
     <div id="search-results" class="absolute top-full left-0 right-0 bg-white border rounded-md mt-1 shadow-lg hidden z-50"></div>
   </form>
 </div>
+<!-- Categories bar -->
+<div class="flex gap-2 overflow-x-auto pb-2 mt-4 hide-scrollbar">
+  {% for category in categories %}
+  <a 
+    href="{{ url_for('view_recipes', category=category) }}" 
+    class="flex-shrink-0 px-4 py-2 rounded-full border text-sm font-medium
+           {% if selected_category == category %}
+             bg-orange-500 text-white border-orange-500
+           {% else %}
+             bg-white text-gray-700 border-gray-300 hover:bg-orange-100
+           {% endif %}">
+    {{ category }}
+  </a>
+  {% endfor %}
+</div>
+
 
 <!-- Toast Container -->
 <div id="toast" class="hidden fixed top-4 right-4 p-4 rounded-md shadow-md text-white z-50 max-w-xs"></div>

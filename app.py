@@ -146,22 +146,42 @@ def view_recipes():
         page = request.args.get('page', 1, type=int)
         per_page = 8
         offset = (page - 1) * per_page
+
+        # New: category filter
+        selected_category = request.args.get('category')
+
         all_recipes = get_all_recipes_with_users()  # Use new function
         app.logger.info(f"Retrieved {len(all_recipes)} recipes")
+
+        # Filter by category if selected
+        if selected_category:
+            all_recipes = [r for r in all_recipes if r['category'] == selected_category]
+            app.logger.info(f"Filtered recipes by category: {selected_category} → {len(all_recipes)} recipes")
+
+        # Pagination
         paginated_recipes = all_recipes[offset:offset + per_page]
         has_next = len(all_recipes) > offset + per_page
+
+        # Favorites
         user_favorites_ids = [fav['id'] for fav in get_user_favorites(session['user_id'])]
         app.logger.info(f"User favorites: {user_favorites_ids}")
+
+        # Distinct categories for chips
+        categories = list({r['category'] for r in get_all_recipes_with_users() if r.get('category')})
+
         return render_template(
             'recipes.html',
             recipes=paginated_recipes,
             user_favorites_ids=user_favorites_ids,
             page=page,
-            has_next=has_next
+            has_next=has_next,
+            categories=categories,
+            selected_category=selected_category
         )
     except Exception as e:
         app.logger.error(f"View recipes error: {str(e)}")
         return f"Server error: {str(e)}", 500
+
 
 @app.route('/favorites')
 def view_favorites():
