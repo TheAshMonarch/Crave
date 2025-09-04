@@ -26,7 +26,17 @@
     <!-- Dropdown for live results -->
     <div id="search-results" class="absolute top-full left-0 right-0 bg-white border rounded-md mt-1 shadow-lg hidden z-50"></div>
   </form>
+
+  <!-- Back button after search -->
+  {% if request.args.get('query') %}
+  <div class="mt-4">
+    <a href="{{ url_for('view_recipes') }}" class="text-orange-500 hover:underline">
+      ← Back to All Recipes
+    </a>
+  </div>
+  {% endif %}
 </div>
+
 <!-- Categories bar -->
 <div class="flex gap-2 overflow-x-auto pb-2 mt-4 hide-scrollbar">
   {% for category in categories %}
@@ -42,7 +52,6 @@
   </a>
   {% endfor %}
 </div>
-
 
 <!-- Toast Container -->
 <div id="toast" class="hidden fixed top-4 right-4 p-4 rounded-md shadow-md text-white z-50 max-w-xs"></div>
@@ -97,16 +106,26 @@
   {% endfor %}
 </div>
 
-{% if has_next %}
-<div class="mt-6 text-center">
+<!-- Pagination -->
+<div class="mt-6 flex justify-center gap-4">
+  {% if page > 1 %}
   <a
-    href="{{ url_for('view_recipes', page=page + 1) }}"
-    class="p-2 login-btn"
+    href="{{ url_for('view_recipes', page=page - 1, category=selected_category, query=request.args.get('query')) }}"
+    class="p-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+  >
+    Previous Page
+  </a>
+  {% endif %}
+
+  {% if has_next %}
+  <a
+    href="{{ url_for('view_recipes', page=page + 1, category=selected_category, query=request.args.get('query')) }}"
+    class="p-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
   >
     Next Page
   </a>
+  {% endif %}
 </div>
-{% endif %}
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
